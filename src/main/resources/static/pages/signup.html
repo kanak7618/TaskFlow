@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up | TaskFlow</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/landing.css">
+    <style>
+        .bg-orbs { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+        .bg-orbs::before { content: ''; position: absolute; width: 400px; height: 400px; background: radial-gradient(circle, rgba(139,92,246,0.2), transparent); border-radius: 50%; top: -100px; left: -100px; filter: blur(60px); }
+        .bg-orbs::after { content: ''; position: absolute; width: 350px; height: 350px; background: radial-gradient(circle, rgba(6,182,212,0.12), transparent); border-radius: 50%; bottom: -50px; right: -50px; filter: blur(60px); }
+        .auth-body { position: relative; }
+        .auth-container { position: relative; z-index: 1; }
+    </style>
+</head>
+<body class="auth-body">
+    <div class="bg-orbs"></div>
+    <div class="auth-container">
+        <div class="auth-logo">
+            <svg viewBox="0 0 48 48" fill="none">
+                <rect width="48" height="48" rx="12" fill="url(#sg)"/>
+                <path d="M12 18h24M12 24h16M12 30h20" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                <circle cx="34" cy="30" r="6" fill="white" opacity="0.9"/>
+                <defs><linearGradient id="sg" x1="0" y1="0" x2="48" y2="48"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+            </svg>
+            <h1>TaskFlow</h1>
+            <p>Create your free account</p>
+        </div>
+
+        <div class="auth-card">
+            <h2 class="auth-title">Get started</h2>
+            <p class="auth-subtitle">Join your team on TaskFlow</p>
+
+            <div id="signup-alert" class="alert alert-error hidden"></div>
+
+            <form id="signup-form">
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" id="fullName" class="form-input" placeholder="John Doe" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" id="email" class="form-input" placeholder="you@company.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="Min 6 characters" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Account Role</label>
+                    <div class="role-selector">
+                        <label class="role-option">
+                            <input type="radio" name="role" value="MEMBER" checked>
+                            <div class="role-label">
+                                <span class="role-emoji">👤</span>
+                                <span>Member</span>
+                            </div>
+                        </label>
+                        <label class="role-option">
+                            <input type="radio" name="role" value="ADMIN">
+                            <div class="role-label">
+                                <span class="role-emoji">👑</span>
+                                <span>Admin</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary w-full" id="signup-btn" style="justify-content: center; margin-top: 8px;">
+                    Create Account
+                </button>
+            </form>
+
+            <p class="auth-footer-text">
+                Already have an account? <a href="/pages/login.html">Sign in</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        if (api.getToken()) window.location.href = '/pages/dashboard.html';
+
+        document.getElementById('signup-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideAlert('signup-alert');
+            setLoading('signup-btn', true, 'Create Account');
+
+            const role = document.querySelector('input[name="role"]:checked').value;
+            try {
+                const data = await api.post('/auth/signup', {
+                    fullName: document.getElementById('fullName').value.trim(),
+                    email: document.getElementById('email').value.trim(),
+                    password: document.getElementById('password').value,
+                    role
+                });
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify({
+                    id: data.userId, fullName: data.fullName,
+                    email: data.email, role: data.role
+                }));
+                window.location.href = '/pages/dashboard.html';
+            } catch (err) {
+                showAlert('signup-alert', err.message || 'Registration failed. Try again.');
+                setLoading('signup-btn', false, 'Create Account');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users | TaskFlow (Admin)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="app-body">
+    <div id="sidebar-container"></div>
+
+    <main class="main-content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">User Management</h1>
+                <p class="page-subtitle" id="user-count">Admin view — All registered users</p>
+            </div>
+            <span class="badge badge-admin" style="font-size:0.8rem;padding:8px 16px;">Admin Only</span>
+        </div>
+
+        <div id="users-container">
+            <div class="empty-state"><div class="spinner"></div></div>
+        </div>
+    </main>
+
+    <script src="/js/api.js"></script>
+    <script>
+        const user = api.requireAuth();
+        if (!api.isAdmin()) {
+            alert('Access denied. Admins only.');
+            window.location.href = '/pages/dashboard.html';
+        }
+        document.getElementById('sidebar-container').innerHTML = renderSidebar('users');
+
+        async function loadUsers() {
+            try {
+                const users = await api.get('/users');
+                document.getElementById('user-count').textContent = `${users.length} registered user${users.length !== 1 ? 's' : ''}`;
+
+                document.getElementById('users-container').innerHTML = `
+                <div class="table-container">
+                    <div class="table-header">
+                        <span class="table-title">👥 All Users</span>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Joined</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${users.map((u, i) => `
+                            <tr>
+                                <td style="color:var(--text-muted);font-size:0.8rem;">${i + 1}</td>
+                                <td>
+                                    <div style="display:flex;align-items:center;gap:10px;">
+                                        <div class="user-avatar" style="width:36px;height:36px;font-size:0.75rem;flex-shrink:0;">${getInitials(u.fullName)}</div>
+                                        <div>
+                                            <div style="font-weight:600;font-size:0.875rem;">${u.fullName}</div>
+                                            ${u.id == api.getUser().id ? '<div style="font-size:0.7rem;color:var(--primary-light);">You</div>' : ''}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span style="font-size:0.875rem;color:var(--text-secondary);">${u.email}</span></td>
+                                <td>${getRoleBadge(u.role)}</td>
+                                <td><span style="font-size:0.8rem;color:var(--text-muted);">${formatDate(u.createdAt)}</span></td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+            } catch(e) {
+                document.getElementById('users-container').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🔒</div>
+                        <div class="empty-title">Access Restricted</div>
+                        <div class="empty-desc">Only admins can view all users</div>
+                    </div>`;
+            }
+        }
+
+        loadUsers();
+    </script>
+</body>
+</html>

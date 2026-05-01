@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects | TaskFlow</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="app-body">
+    <div id="sidebar-container"></div>
+
+    <main class="main-content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Projects</h1>
+                <p class="page-subtitle" id="proj-count">Loading...</p>
+            </div>
+            <button class="btn-primary" id="new-project-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                New Project
+            </button>
+        </div>
+
+        <div id="projects-container">
+            <div class="empty-state"><div class="spinner"></div></div>
+        </div>
+    </main>
+
+    <!-- Project Detail Panel -->
+    <div id="project-detail" class="hidden" style="position:fixed;inset:0;z-index:50;display:flex;">
+        <div style="flex:1;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);" onclick="closeDetail()"></div>
+        <div style="width:520px;background:#0d0d1a;border-left:1px solid var(--border);overflow-y:auto;padding:32px;display:flex;flex-direction:column;gap:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <h2 id="detail-name" style="font-size:1.25rem;font-weight:700;"></h2>
+                <button onclick="closeDetail()" class="modal-close">✕</button>
+            </div>
+            <p id="detail-desc" style="color:var(--text-secondary);font-size:0.875rem;"></p>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;">
+                    <div id="detail-total" style="font-size:1.5rem;font-weight:800;color:var(--primary-light);">0</div>
+                    <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:4px;">Total</div>
+                </div>
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;">
+                    <div id="detail-done" style="font-size:1.5rem;font-weight:800;color:#10b981;">0</div>
+                    <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:4px;">Done</div>
+                </div>
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;">
+                    <div id="detail-progress" style="font-size:1.5rem;font-weight:800;color:#06b6d4;">0</div>
+                    <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:4px;">In Progress</div>
+                </div>
+            </div>
+
+            <div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                    <h3 style="font-size:0.875rem;font-weight:600;">Team Members</h3>
+                    <button id="add-member-btn" class="btn-ghost" style="padding:6px 12px;font-size:0.75rem;">+ Add Member</button>
+                </div>
+                <div id="detail-members" class="task-list"></div>
+            </div>
+
+            <div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                    <h3 style="font-size:0.875rem;font-weight:600;">Tasks</h3>
+                    <button id="add-task-btn" class="btn-primary" style="padding:6px 14px;font-size:0.75rem;">+ Add Task</button>
+                </div>
+                <div id="detail-tasks" class="task-list"></div>
+            </div>
+
+            <div style="display:flex;gap:10px;padding-top:8px;border-top:1px solid var(--border);">
+                <button id="edit-proj-btn" class="btn-ghost w-full" style="justify-content:center;">Edit Project</button>
+                <button id="delete-proj-btn" class="btn-danger w-full" style="justify-content:center;">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Project Modal -->
+    <div id="project-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="proj-modal-title">New Project</h3>
+                <button class="modal-close" onclick="closeProjectModal()">✕</button>
+            </div>
+            <div id="proj-alert" class="alert alert-error hidden"></div>
+            <form id="project-form">
+                <div class="form-group">
+                    <label class="form-label">Project Name *</label>
+                    <input type="text" id="proj-name" class="form-input" placeholder="e.g. Website Redesign" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea id="proj-desc" class="form-textarea" placeholder="What is this project about?"></textarea>
+                </div>
+                <button type="submit" class="btn-primary w-full" id="proj-submit-btn" style="justify-content:center;">Create Project</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Member Modal -->
+    <div id="member-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Add Team Member</h3>
+                <button class="modal-close" onclick="document.getElementById('member-modal').classList.add('hidden')">✕</button>
+            </div>
+            <div id="member-alert" class="alert alert-error hidden"></div>
+            <div class="form-group">
+                <label class="form-label">Select User</label>
+                <select id="member-select" class="form-select"></select>
+            </div>
+            <button class="btn-primary w-full" id="add-member-submit" style="justify-content:center;" onclick="addMember()">Add Member</button>
+        </div>
+    </div>
+
+    <!-- Task Modal -->
+    <div id="task-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="task-modal-title">New Task</h3>
+                <button class="modal-close" onclick="document.getElementById('task-modal').classList.add('hidden')">✕</button>
+            </div>
+            <div id="task-alert" class="alert alert-error hidden"></div>
+            <form id="task-form">
+                <div class="form-group">
+                    <label class="form-label">Task Title *</label>
+                    <input type="text" id="task-title" class="form-input" placeholder="What needs to be done?" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea id="task-desc" class="form-textarea" placeholder="Task details..." style="min-height:80px;"></textarea>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div class="form-group">
+                        <label class="form-label">Priority</label>
+                        <select id="task-priority" class="form-select">
+                            <option value="LOW">Low</option>
+                            <option value="MEDIUM" selected>Medium</option>
+                            <option value="HIGH">High</option>
+                            <option value="CRITICAL">Critical</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Due Date</label>
+                        <input type="date" id="task-due" class="form-input">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Assign To</label>
+                    <select id="task-assignee" class="form-select">
+                        <option value="">Unassigned</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary w-full" id="task-submit-btn" style="justify-content:center;">Create Task</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        api.requireAuth();
+        document.getElementById('sidebar-container').innerHTML = renderSidebar('projects');
+
+        let projects = [];
+        let currentProject = null;
+        let editingProjectId = null;
+        let allUsers = [];
+
+        async function loadProjects() {
+            try {
+                projects = await api.get('/projects');
+                allUsers = await api.get('/users/all');
+                document.getElementById('proj-count').textContent = `${projects.length} project${projects.length !== 1 ? 's' : ''}`;
+                renderProjects();
+                const urlId = new URLSearchParams(location.search).get('id');
+                if (urlId) openDetail(projects.find(p => p.id == urlId));
+            } catch(e) { console.error(e); }
+        }
+
+        function renderProjects() {
+            const c = document.getElementById('projects-container');
+            if (!projects.length) {
+                c.innerHTML = `<div class="empty-state">
+                    <div class="empty-icon">📁</div>
+                    <div class="empty-title">No projects yet</div>
+                    <div class="empty-desc">Create your first project to start managing tasks</div>
+                    <button class="btn-primary" onclick="openProjectModal()">Create First Project</button>
+                </div>`;
+                return;
+            }
+            c.innerHTML = '<div class="projects-grid">' + projects.map(p => {
+                const pct = p.totalTasks > 0 ? Math.round((p.completedTasks / p.totalTasks) * 100) : 0;
+                return `<div class="project-card" onclick="openDetail(${JSON.stringify(p).replace(/"/g,'&quot;')})">
+                    <div class="project-card-header">
+                        <div class="project-card-name">${p.name}</div>
+                        <span class="badge badge-member">${p.totalTasks} tasks</span>
+                    </div>
+                    <div class="project-card-desc">${p.description || 'No description provided'}</div>
+                    <div class="project-progress">
+                        <div class="progress-label"><span>Progress</span><span>${pct}%</span></div>
+                        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+                    </div>
+                    <div class="project-card-footer">
+                        <span>${p.members?.length || 0} members</span>
+                        <span>${p.completedTasks}/${p.totalTasks} completed</span>
+                    </div>
+                </div>`;
+            }).join('') + '</div>';
+        }
+
+        async function openDetail(p) {
+            if (!p) return;
+            currentProject = p;
+            document.getElementById('detail-name').textContent = p.name;
+            document.getElementById('detail-desc').textContent = p.description || 'No description';
+            document.getElementById('detail-total').textContent = p.totalTasks;
+            document.getElementById('detail-done').textContent = p.completedTasks;
+            document.getElementById('detail-progress').textContent = p.inProgressTasks;
+
+            // Members
+            document.getElementById('detail-members').innerHTML = (p.members || []).map(m => `
+                <div class="task-item">
+                    <div class="user-avatar" style="width:32px;height:32px;font-size:0.75rem;">${getInitials(m.fullName)}</div>
+                    <div class="task-info">
+                        <div class="task-title">${m.fullName}</div>
+                        <div class="task-meta">${getRoleBadge(m.role)} <span>${m.email}</span></div>
+                    </div>
+                    ${m.id !== p.owner?.id ? `<button onclick="removeMember(${m.id})" class="btn-danger" style="padding:4px 8px;font-size:0.7rem;">Remove</button>` : '<span class="badge badge-admin">Owner</span>'}
+                </div>`).join('');
+
+            // Tasks
+            try {
+                const tasks = await api.get(`/tasks/project/${p.id}`);
+                document.getElementById('detail-tasks').innerHTML = tasks.length ? tasks.map(t => `
+                    <div class="task-item">
+                        <div class="task-check ${t.status === 'DONE' ? 'done' : ''}"></div>
+                        <div class="task-info">
+                            <div class="task-title ${t.status === 'DONE' ? 'done' : ''}">${t.title}</div>
+                            <div class="task-meta">${getStatusBadge(t.status)} ${getPriorityBadge(t.priority)} ${t.assignee ? `<span>→ ${t.assignee.fullName}</span>` : ''}</div>
+                        </div>
+                        ${t.overdue ? '<span class="badge badge-overdue">Overdue</span>' : ''}
+                    </div>`).join('') : '<div class="empty-state" style="padding:20px;"><div class="empty-desc">No tasks yet. Add one!</div></div>';
+            } catch(e) {}
+
+            // Edit/Delete buttons
+            document.getElementById('edit-proj-btn').onclick = () => openProjectModal(p);
+            document.getElementById('delete-proj-btn').onclick = () => deleteProject(p.id);
+            document.getElementById('add-task-btn').onclick = () => openTaskModal(p);
+            document.getElementById('add-member-btn').onclick = () => openMemberModal(p);
+
+            document.getElementById('project-detail').classList.remove('hidden');
+        }
+
+        function closeDetail() {
+            document.getElementById('project-detail').classList.add('hidden');
+            currentProject = null;
+        }
+
+        function openProjectModal(p = null) {
+            editingProjectId = p?.id || null;
+            document.getElementById('proj-modal-title').textContent = p ? 'Edit Project' : 'New Project';
+            document.getElementById('proj-name').value = p?.name || '';
+            document.getElementById('proj-desc').value = p?.description || '';
+            document.getElementById('proj-submit-btn').textContent = p ? 'Save Changes' : 'Create Project';
+            hideAlert('proj-alert');
+            document.getElementById('project-modal').classList.remove('hidden');
+        }
+
+        function closeProjectModal() {
+            document.getElementById('project-modal').classList.add('hidden');
+            editingProjectId = null;
+        }
+
+        document.getElementById('new-project-btn').onclick = () => openProjectModal();
+
+        document.getElementById('project-form').onsubmit = async (e) => {
+            e.preventDefault();
+            setLoading('proj-submit-btn', true, 'Save');
+            try {
+                const body = { name: document.getElementById('proj-name').value.trim(), description: document.getElementById('proj-desc').value.trim() };
+                if (editingProjectId) { await api.put(`/projects/${editingProjectId}`, body); }
+                else { await api.post('/projects', body); }
+                closeProjectModal();
+                await loadProjects();
+            } catch(e) { showAlert('proj-alert', e.message); setLoading('proj-submit-btn', false, 'Save'); }
+        };
+
+        async function deleteProject(id) {
+            if (!confirm('Delete this project and all its tasks?')) return;
+            try { await api.delete(`/projects/${id}`); closeDetail(); await loadProjects(); }
+            catch(e) { alert(e.message); }
+        }
+
+        function openMemberModal(p) {
+            const existing = (p.members || []).map(m => m.id);
+            const opts = allUsers.filter(u => !existing.includes(u.id));
+            if (!opts.length) { alert('All users are already members!'); return; }
+            document.getElementById('member-select').innerHTML = opts.map(u => `<option value="${u.id}">${u.fullName} (${u.role})</option>`).join('');
+            hideAlert('member-alert');
+            document.getElementById('member-modal').classList.remove('hidden');
+        }
+
+        async function addMember() {
+            const uid = document.getElementById('member-select').value;
+            if (!uid || !currentProject) return;
+            try {
+                const updated = await api.post(`/projects/${currentProject.id}/members/${uid}`, {});
+                document.getElementById('member-modal').classList.add('hidden');
+                openDetail(updated);
+                await loadProjects();
+            } catch(e) { showAlert('member-alert', e.message); }
+        }
+
+        async function removeMember(uid) {
+            if (!confirm('Remove this member?')) return;
+            try {
+                const updated = await api.delete(`/projects/${currentProject.id}/members/${uid}`);
+                openDetail(updated);
+                await loadProjects();
+            } catch(e) { alert(e.message); }
+        }
+
+        function openTaskModal(p) {
+            document.getElementById('task-assignee').innerHTML = '<option value="">Unassigned</option>' +
+                (p.members || []).map(m => `<option value="${m.id}">${m.fullName}</option>`).join('');
+            hideAlert('task-alert');
+            document.getElementById('task-form').reset();
+            document.getElementById('task-priority').value = 'MEDIUM';
+            document.getElementById('task-modal').classList.remove('hidden');
+        }
+
+        document.getElementById('task-form').onsubmit = async (e) => {
+            e.preventDefault();
+            setLoading('task-submit-btn', true, 'Create Task');
+            try {
+                const assigneeId = document.getElementById('task-assignee').value;
+                await api.post('/tasks', {
+                    title: document.getElementById('task-title').value.trim(),
+                    description: document.getElementById('task-desc').value.trim(),
+                    projectId: currentProject.id,
+                    priority: document.getElementById('task-priority').value,
+                    dueDate: document.getElementById('task-due').value || null,
+                    assigneeId: assigneeId ? parseInt(assigneeId) : null,
+                    status: 'TODO'
+                });
+                document.getElementById('task-modal').classList.add('hidden');
+                if (currentProject) openDetail(currentProject);
+                await loadProjects();
+                setLoading('task-submit-btn', false, 'Create Task');
+            } catch(e) { showAlert('task-alert', e.message); setLoading('task-submit-btn', false, 'Create Task'); }
+        };
+
+        loadProjects();
+    </script>
+</body>
+</html>
